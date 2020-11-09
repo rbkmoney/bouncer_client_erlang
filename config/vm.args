@@ -1,0 +1,6 @@
+-sname bouncer_client
+
+-setcookie bouncer_client_cookie
+
++K true
++A 10

@@ -6,27 +6,24 @@
 -define(DEFAULT_DEADLINE, 5000).
 
 %%
--type client_opts() :: #{
-    url := woody:url(),
-    %% See hackney:request/5 for available transport options.
-    transport_opts => woody_client_thrift_http_transport:transport_options()
-}.
+-type service_name() :: atom().
 
--spec call(atom(), woody:func(), woody:args(), woody_context:ctx()) -> woody:result().
-call(Service, Function, Args, Context0) ->
-    Deadline = get_service_deadline(),
+-spec call(service_name(), woody:func(), woody:args(), woody_context:ctx()) -> woody:result().
+call(ServiceName, Function, Args, Context0) ->
+    Deadline = get_service_deadline(ServiceName),
     Context1 = set_deadline(Deadline, Context0),
-    Retry = get_service_retry(Function),
+    Retry = get_service_retry(ServiceName, Function),
     EventHandler = scoper_woody_event_handler,
-    call(Service, Function, Args, Context1, EventHandler, Retry).
+    call(ServiceName, Function, Args, Context1, EventHandler, Retry).
 
-call(Service, Function, Args, Context, EventHandler, Retry) ->
-    Options = get_service_options(Service),
-    Request = {{bouncer_thrift, Service}, Function, Args},
+call(ServiceName, Function, Args, Context, EventHandler, Retry) ->
+    Url = get_service_client_url(ServiceName),
+    Service = get_service_modname(ServiceName),
+    Request = {Service, Function, Args},
     try
         woody_client:call(
             Request,
-            Options#{event_handler => EventHandler},
+            #{url => Url, event_handler => EventHandler},
             Context
         )
     catch
@@ -36,15 +33,6 @@ call(Service, Function, Args, Context, EventHandler, Retry) ->
             NextRetry = apply_retry_strategy(Retry, Error, Context),
             call(Service, Function, Args, Context, EventHandler, NextRetry)
     end.
-
--spec get_service_options(atom()) -> client_opts().
-get_service_options(Service) ->
-    construct_opts(maps:get(Service, genlib_app:env(?APP, services))).
-
-construct_opts(Opts = #{url := Url}) ->
-    Opts#{url := genlib:to_binary(Url)};
-construct_opts(Url) ->
-    #{url => genlib:to_binary(Url)}.
 
 apply_retry_strategy(Retry, Error, Context) ->
     apply_retry_step(genlib_retry:next_step(Retry), woody_context:get_deadline(Context), Error).
@@ -67,13 +55,22 @@ apply_retry_step({wait, Timeout, Retry}, Deadline0, Error) ->
             Retry
     end.
 
-get_service_deadline() ->
-    case genlib_app:env(?APP, deadline, undefined) of
-        Timeout when is_integer(Timeout) andalso Timeout >= 0 ->
-            woody_deadline:from_timeout(Timeout);
-        undefined ->
-            undefined
-    end.
+get_service_client_config(ServiceName) ->
+    ServiceClients = genlib_app:env(bouncer_client, service_clients, #{}),
+    maps:get(ServiceName, ServiceClients, #{}).
+
+get_service_client_url(ServiceName) ->
+    maps:get(url, get_service_client_config(ServiceName), undefined).
+
+-spec get_service_modname(service_name()) -> woody:service().
+get_service_modname(bouncer) ->
+    {bouncer_decisions_thrift, 'Arbiter'}.
+
+-spec get_service_deadline(service_name()) -> undefined | woody_deadline:deadline().
+get_service_deadline(ServiceName) ->
+    ServiceClient = get_service_client_config(ServiceName),
+    Timeout = maps:get(deadline, ServiceClient, ?DEFAULT_DEADLINE),
+    woody_deadline:from_timeout(Timeout).
 
 set_deadline(Deadline, Context) ->
     case woody_context:get_deadline(Context) of
@@ -83,7 +80,8 @@ set_deadline(Deadline, Context) ->
             Context
     end.
 
-get_service_retry(Function) ->
-    FunctionReties = genlib_app:env(?APP, retries, #{}),
+get_service_retry(ServiceName, Function) ->
+    ServiceRetries = genlib_app:env(?APP, service_retries, #{}),
+    FunctionReties = maps:get(ServiceName, ServiceRetries, #{}),
     DefaultRetry = maps:get('_', FunctionReties, finish),
     maps:get(Function, FunctionReties, DefaultRetry).
