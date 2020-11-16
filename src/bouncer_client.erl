@@ -10,6 +10,7 @@
 
 -export([judge/2]).
 -export([make_env_context_fragment/0]).
+-export([make_env_context_fragment/1]).
 -export([make_auth_context_fragment/2]).
 -export([make_default_user_context_fragment/1]).
 -export([make_requester_context_fragment/1]).
@@ -17,15 +18,11 @@
 
 %%
 
--define(APP, shortener).
--define(DEFAULT_DEADLINE, 5000).
-
-%%
-
 -type auth_method() :: binary().
 -type timestamp() :: non_neg_integer().
 -type ip() :: string().
 -type user_id() :: binary().
+-type datetime() :: binary().
 -type woody_context() :: woody_context:ctx().
 
 -type context_fragment_id() :: binary().
@@ -88,11 +85,10 @@ collect_fragments(_, Context) ->
 collect_fragments_(FragmentID, {encoded_fragment, EncodedFragment}, Acc0) ->
     Acc0#{FragmentID => EncodedFragment};
 collect_fragments_(FragmentID, {fragment, Fragment}, Acc0) ->
-    Type = {struct, struct, {bouncer_context_v1_thrift, 'ContextFragment'}},
     Acc0#{
         FragmentID => #bctx_ContextFragment{
             type = v1_thrift_binary,
-            content = encode_context_fragment(Type, Fragment)
+            content = encode_context_fragment(Fragment)
         }
     }.
 
@@ -100,9 +96,13 @@ collect_fragments_(FragmentID, {fragment, Fragment}, Acc0) ->
 
 -spec make_env_context_fragment() -> context_fragment().
 make_env_context_fragment() ->
+    make_env_context_fragment(genlib_rfc3339:format(genlib_time:unow(), second)).
+
+-spec make_env_context_fragment(datetime()) -> context_fragment().
+make_env_context_fragment(Datetime) ->
     {fragment, #bctx_v1_ContextFragment{
         env = #bctx_v1_Environment{
-            now = genlib_rfc3339:format(genlib_time:unow(), second)
+            now = Datetime
         }
     }}.
 
@@ -168,7 +168,8 @@ convert_fragment(org_management, {bctx_ContextFragment, Type = v1_thrift_binary,
 
 %%
 
-encode_context_fragment(Type, ContextFragment) ->
+encode_context_fragment(ContextFragment) ->
+    Type = {struct, struct, {bouncer_context_v1_thrift, 'ContextFragment'}},
     Codec = thrift_strict_binary_codec:new(),
     case thrift_strict_binary_codec:write(Codec, Type, ContextFragment) of
         {ok, Codec1} ->
