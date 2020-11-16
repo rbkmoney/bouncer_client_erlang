@@ -31,7 +31,7 @@ call(ServiceName, Function, Args, Context, EventHandler, Retry) ->
             Class =:= resource_unavailable orelse Class =:= result_unknown
         ->
             NextRetry = apply_retry_strategy(Retry, Error, Context),
-            call(Service, Function, Args, Context, EventHandler, NextRetry)
+            call(ServiceName, Function, Args, Context, EventHandler, NextRetry)
     end.
 
 apply_retry_strategy(Retry, Error, Context) ->
@@ -63,6 +63,8 @@ get_service_client_url(ServiceName) ->
     maps:get(url, get_service_client_config(ServiceName), undefined).
 
 -spec get_service_modname(service_name()) -> woody:service().
+get_service_modname(org_management) ->
+    {orgmgmt_auth_context_provider_thrift, 'AuthContextProvider'};
 get_service_modname(bouncer) ->
     {bouncer_decisions_thrift, 'Arbiter'}.
 

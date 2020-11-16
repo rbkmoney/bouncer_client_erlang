@@ -50,14 +50,14 @@ init_per_suite(Config) ->
     Apps =
         genlib_app:start_application_with(bouncer_client, [
             {service_clients, #{
-            bouncer => #{
-                url => <<"http://bouncer:8022/">>,
-                retries => #{
-                    'Judge'   => {linear, 3, 1000},
-                    '_'     => finish
+                bouncer => #{
+                    url => <<"http://bouncer:8022/">>,
+                    retries => #{
+                        'Judge' => {linear, 3, 1000},
+                        '_' => finish
+                    }
                 }
-            }
-        }}
+            }}
         ]),
     [{apps, Apps}] ++ Config.
 
@@ -86,7 +86,7 @@ judge(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    true = bouncer_client:judge(#{builders => []}, WoodyContext).
+    allowed = bouncer_client:judge(#{builders => []}, WoodyContext).
 
 %%
 
@@ -158,7 +158,7 @@ mock_service_handler({ServiceName, WoodyService, Fun}) ->
     mock_service_handler(ServiceName, WoodyService, Fun).
 
 mock_service_handler(ServiceName, WoodyService, Fun) ->
-    {make_path(ServiceName), {WoodyService, {dummy_service, #{function => Fun}}}}.
+    {make_path(ServiceName), {WoodyService, {bouncer_client_dummy_service, #{function => Fun}}}}.
 
 get_service_modname(bouncer) ->
     {bouncer_decisions_thrift, 'Arbiter'}.
