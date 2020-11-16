@@ -73,8 +73,8 @@ init_per_suite(Config) ->
                         % default value is 'finish'
                         % for more info look genlib_retry :: strategy()
                         % https://github.com/rbkmoney/genlib/blob/master/src/genlib_retry.erl#L19
-                        'GetUserContext'   => {linear, 3, 1000},
-                        '_'     => finish
+                        'GetUserContext' => {linear, 3, 1000},
+                        '_' => finish
                     }
                 }
             }}
@@ -125,9 +125,10 @@ validate_default_user_fragment(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    allowed = bouncer_client:judge(#{fragments =>
-        #{<<"user">> => bouncer_client:make_default_user_context_fragment(UserID)}
-    }, WoodyContext).
+    allowed = bouncer_client:judge(
+        #{fragments => #{<<"user">> => bouncer_client:make_default_user_context_fragment(UserID)}},
+        WoodyContext
+    ).
 
 -spec validate_env_fragment(config()) -> _.
 validate_env_fragment(C) ->
@@ -146,9 +147,10 @@ validate_env_fragment(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    allowed = bouncer_client:judge(#{fragments =>
-        #{<<"env">> => bouncer_client:make_env_context_fragment(Time)}
-    }, WoodyContext).
+    allowed = bouncer_client:judge(
+        #{fragments => #{<<"env">> => bouncer_client:make_env_context_fragment(Time)}},
+        WoodyContext
+    ).
 
 -spec validate_auth_fragment(config()) -> _.
 validate_auth_fragment(C) ->
@@ -167,9 +169,10 @@ validate_auth_fragment(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    allowed = bouncer_client:judge(#{fragments =>
-        #{<<"auth">> => bouncer_client:make_auth_context_fragment(Method, undefined)}
-    }, WoodyContext).
+    allowed = bouncer_client:judge(
+        #{fragments => #{<<"auth">> => bouncer_client:make_auth_context_fragment(Method, undefined)}},
+        WoodyContext
+    ).
 
 -spec validate_requester_fragment(config()) -> _.
 validate_requester_fragment(C) ->
@@ -193,9 +196,10 @@ validate_requester_fragment(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    allowed = bouncer_client:judge(#{fragments =>
-        #{<<"requester">> => bouncer_client:make_requester_context_fragment(IP)}
-    }, WoodyContext).
+    allowed = bouncer_client:judge(
+        #{fragments => #{<<"requester">> => bouncer_client:make_requester_context_fragment(IP)}},
+        WoodyContext
+    ).
 
 -spec validate_user_fragment(config()) -> _.
 validate_user_fragment(C) ->
@@ -223,9 +227,7 @@ validate_user_fragment(C) ->
     ),
     WoodyContext = woody_context:new(),
     {ok, EncodedUserFragment} = bouncer_client:get_user_context_fragment(UserID, WoodyContext),
-    allowed = bouncer_client:judge(#{fragments =>
-        #{<<"user">> => EncodedUserFragment}
-    }, WoodyContext).
+    allowed = bouncer_client:judge(#{fragments => #{<<"user">> => EncodedUserFragment}}, WoodyContext).
 
 %%
 
