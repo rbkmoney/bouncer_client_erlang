@@ -5,6 +5,9 @@ SUBTARGETS = $(patsubst %,%/.git,$(SUBMODULES))
 UTILS_PATH := build_utils
 TEMPLATES_PATH := .
 
+# Name of the service
+SERVICE_NAME := bouncer_client_erlang
+
 BUILD_IMAGE_TAG := 0c638a682f4735a65ef232b81ed872ba494574c3
 
 CALL_ANYWHERE := \
