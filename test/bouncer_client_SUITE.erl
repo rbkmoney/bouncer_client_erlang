@@ -16,10 +16,11 @@
 
 -export([empty_judge/1]).
 -export([validate_default_user_fragment/1]).
+-export([validate_user_fragment/1]).
 -export([validate_env_fragment/1]).
 -export([validate_auth_fragment/1]).
 -export([validate_requester_fragment/1]).
--export([validate_user_fragment/1]).
+-export([validate_remote_user_fragment/1]).
 
 -type test_case_name() :: atom().
 
@@ -39,10 +40,11 @@ groups() ->
         {default, [], [
             empty_judge,
             validate_default_user_fragment,
+            validate_user_fragment,
             validate_env_fragment,
             validate_auth_fragment,
             validate_requester_fragment,
-            validate_user_fragment
+            validate_remote_user_fragment
         ]}
     ].
 
@@ -126,6 +128,29 @@ validate_default_user_fragment(C) ->
         WoodyContext
     ).
 
+-spec validate_user_fragment(config()) -> _.
+validate_user_fragment(C) ->
+    UserID = <<"someUser">>,
+    mock_services(
+        [
+            {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
+                case get_user_id(Fragments) of
+                    UserID ->
+                        {ok, #bdcs_Judgement{resolution = allowed}};
+                    _ ->
+                        {ok, #bdcs_Judgement{resolution = forbidden}}
+                end
+            end}
+        ],
+        C
+    ),
+    WoodyContext = woody_context:new(),
+    allowed = bouncer_client:judge(
+        ?RULESET_ID,
+        #{fragments => #{<<"user">> => bouncer_context_helpers:make_user_context_fragment(#{id => UserID})}},
+        WoodyContext
+    ).
+
 -spec validate_env_fragment(config()) -> _.
 validate_env_fragment(C) ->
     Time = genlib_rfc3339:format(genlib_time:unow(), second),
@@ -145,7 +170,7 @@ validate_env_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"env">> => bouncer_context_helpers:make_env_context_fragment(Time)}},
+        #{fragments => #{<<"env">> => bouncer_context_helpers:make_env_context_fragment(#{now => Time})}},
         WoodyContext
     ).
 
@@ -168,7 +193,7 @@ validate_auth_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"auth">> => bouncer_context_helpers:make_auth_context_fragment(Method, undefined)}},
+        #{fragments => #{<<"auth">> => bouncer_context_helpers:make_auth_context_fragment(#{method => Method})}},
         WoodyContext
     ).
 
@@ -196,12 +221,12 @@ validate_requester_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"requester">> => bouncer_context_helpers:make_requester_context_fragment(IP)}},
+        #{fragments => #{<<"requester">> => bouncer_context_helpers:make_requester_context_fragment(#{ip => IP})}},
         WoodyContext
     ).
 
--spec validate_user_fragment(config()) -> _.
-validate_user_fragment(C) ->
+-spec validate_remote_user_fragment(config()) -> _.
+validate_remote_user_fragment(C) ->
     UserID = <<"someUser">>,
     mock_services(
         [
