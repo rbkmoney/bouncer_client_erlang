@@ -7,6 +7,8 @@
         stdlib,
         genlib,
         bouncer_proto,
+        org_management_proto,
+        scoper,
         woody
     ]},
     {env, []},

@@ -1,4 +1,4 @@
--module(bouncer_client_dummy_service).
+-module(bouncer_client_mock_service).
 
 -behaviour(woody_server_thrift_handler).
 

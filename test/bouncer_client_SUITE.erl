@@ -7,7 +7,6 @@
 -include_lib("bouncer_proto/include/bouncer_context_v1_thrift.hrl").
 
 -export([all/0]).
--export([init/1]).
 
 -export([groups/0]).
 -export([init_per_suite/1]).
@@ -24,13 +23,9 @@
 
 -type test_case_name() :: atom().
 
--behaviour(supervisor).
+-define(RULESET_ID, <<"service/authz/api">>).
 
 %% tests descriptions
-
--spec init([]) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
-init([]) ->
-    {ok, {#{strategy => one_for_all, intensity => 1, period => 1}, []}}.
 
 -spec all() -> [test_case_name()].
 all() ->
@@ -88,7 +83,7 @@ end_per_suite(Config) ->
 
 -spec init_per_testcase(test_case_name(), config()) -> config().
 init_per_testcase(_Name, C) ->
-    [{test_sup, start_mocked_service_sup(?MODULE)} | C].
+    [{test_sup, start_mocked_service_sup()} | C].
 
 -spec end_per_testcase(test_case_name(), config()) -> config().
 end_per_testcase(_Name, C) ->
@@ -106,7 +101,7 @@ empty_judge(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    allowed = bouncer_client:judge(#{}, WoodyContext).
+    allowed = bouncer_client:judge(?RULESET_ID, #{}, WoodyContext).
 
 -spec validate_default_user_fragment(config()) -> _.
 validate_default_user_fragment(C) ->
@@ -126,7 +121,8 @@ validate_default_user_fragment(C) ->
     ),
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
-        #{fragments => #{<<"user">> => bouncer_client:make_default_user_context_fragment(UserID)}},
+        ?RULESET_ID,
+        #{fragments => #{<<"user">> => bouncer_context_helpers:make_default_user_context_fragment(UserID)}},
         WoodyContext
     ).
 
@@ -148,7 +144,8 @@ validate_env_fragment(C) ->
     ),
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
-        #{fragments => #{<<"env">> => bouncer_client:make_env_context_fragment(Time)}},
+        ?RULESET_ID,
+        #{fragments => #{<<"env">> => bouncer_context_helpers:make_env_context_fragment(Time)}},
         WoodyContext
     ).
 
@@ -170,7 +167,8 @@ validate_auth_fragment(C) ->
     ),
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
-        #{fragments => #{<<"auth">> => bouncer_client:make_auth_context_fragment(Method, undefined)}},
+        ?RULESET_ID,
+        #{fragments => #{<<"auth">> => bouncer_context_helpers:make_auth_context_fragment(Method, undefined)}},
         WoodyContext
     ).
 
@@ -197,7 +195,8 @@ validate_requester_fragment(C) ->
     ),
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
-        #{fragments => #{<<"requester">> => bouncer_client:make_requester_context_fragment(IP)}},
+        ?RULESET_ID,
+        #{fragments => #{<<"requester">> => bouncer_context_helpers:make_requester_context_fragment(IP)}},
         WoodyContext
     ).
 
@@ -226,8 +225,8 @@ validate_user_fragment(C) ->
         C
     ),
     WoodyContext = woody_context:new(),
-    {ok, EncodedUserFragment} = bouncer_client:get_user_context_fragment(UserID, WoodyContext),
-    allowed = bouncer_client:judge(#{fragments => #{<<"user">> => EncodedUserFragment}}, WoodyContext).
+    {ok, EncodedUserFragment} = bouncer_context_helpers:get_user_context_fragment(UserID, WoodyContext),
+    allowed = bouncer_client:judge(?RULESET_ID, #{fragments => #{<<"user">> => EncodedUserFragment}}, WoodyContext).
 
 %%
 
@@ -316,8 +315,8 @@ encode(ContextFragment) ->
 
 %%
 
-start_mocked_service_sup(Module) ->
-    {ok, SupPid} = supervisor:start_link(Module, []),
+start_mocked_service_sup() ->
+    {ok, SupPid} = genlib_adhoc_supervisor:start_link(#{}, []),
     _ = unlink(SupPid),
     SupPid.
 
@@ -381,7 +380,7 @@ mock_service_handler({ServiceName, WoodyService, Fun}) ->
     mock_service_handler(ServiceName, WoodyService, Fun).
 
 mock_service_handler(ServiceName, WoodyService, Fun) ->
-    {make_path(ServiceName), {WoodyService, {bouncer_client_dummy_service, #{function => Fun}}}}.
+    {make_path(ServiceName), {WoodyService, {bouncer_client_mock_service, #{function => Fun}}}}.
 
 get_service_modname(org_management) ->
     {orgmgmt_auth_context_provider_thrift, 'AuthContextProvider'};

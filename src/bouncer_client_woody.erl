@@ -1,6 +1,7 @@
 -module(bouncer_client_woody).
 
 -export([call/4]).
+-export([call/5]).
 
 -define(APP, bouncer_client).
 -define(DEFAULT_DEADLINE, 5000).
@@ -9,11 +10,15 @@
 -type service_name() :: atom().
 
 -spec call(service_name(), woody:func(), woody:args(), woody_context:ctx()) -> woody:result().
-call(ServiceName, Function, Args, Context0) ->
+call(ServiceName, Function, Args, Context) ->
+    EventHandler = scoper_woody_event_handler,
+    call(ServiceName, Function, Args, Context, EventHandler).
+
+-spec call(service_name(), woody:func(), woody:args(), woody_context:ctx(), woody:ev_handler()) -> woody:result().
+call(ServiceName, Function, Args, Context0, EventHandler) ->
     Deadline = get_service_deadline(ServiceName),
     Context1 = set_deadline(Deadline, Context0),
     Retry = get_service_retry(ServiceName, Function),
-    EventHandler = scoper_woody_event_handler,
     call(ServiceName, Function, Args, Context1, EventHandler, Retry).
 
 call(ServiceName, Function, Args, Context, EventHandler, Retry) ->
