@@ -2,9 +2,6 @@
 
 -include_lib("bouncer_proto/include/bouncer_decisions_thrift.hrl").
 -include_lib("bouncer_proto/include/bouncer_context_v1_thrift.hrl").
--include_lib("bouncer_proto/include/bouncer_context_thrift.hrl").
-
-% -include_lib("org_management_proto/include/orgmgmt_auth_context_provider_thrift.hrl").
 
 %% API
 
