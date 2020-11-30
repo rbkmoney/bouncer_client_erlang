@@ -25,7 +25,7 @@
 -type woody_context() :: woody_context:ctx().
 
 -type entity() :: #{
-    id => id()
+    id := id()
 }.
 
 -type environment_params() :: #{
@@ -38,7 +38,7 @@
 }.
 
 -type auth_params() :: #{
-    method => method(),
+    method := method(),
     scope => [auth_scope()],
     expiration => timestamp()
 }.
@@ -50,8 +50,8 @@
 }.
 
 -type user_params() :: #{
-    id => id(),
-    realm => entity(),
+    id := id(),
+    realm := entity(),
     email => email(),
     orgs => [user_org()]
 }.
@@ -108,7 +108,7 @@ make_auth_fragment(Params) ->
 
 -spec add_auth(auth_params(), context_fragment()) -> context_fragment().
 add_auth(Params, ContextFragment = #bctx_v1_ContextFragment{auth = undefined}) ->
-    Method = maybe_get_param(method, Params),
+    Method = get_param(method, Params),
     Scope = maybe_get_param(scope, Params),
     Expiration = maybe_get_param(expiration, Params),
     ContextFragment#bctx_v1_ContextFragment{
@@ -125,14 +125,14 @@ make_user_fragment(Params) ->
 
 -spec add_user(user_params(), context_fragment()) -> context_fragment().
 add_user(Params, ContextFragment = #bctx_v1_ContextFragment{user = undefined}) ->
-    UserID = maybe_get_param(id, Params),
-    RealmEntity = maybe_get_param(realm, Params),
+    UserID = get_param(id, Params),
+    RealmEntity = get_param(realm, Params),
     Email = maybe_get_param(email, Params),
     Orgs = maybe_get_param(orgs, Params),
     ContextFragment#bctx_v1_ContextFragment{
         user = #bctx_v1_User{
             id = UserID,
-            realm = maybe_add_param(maybe_marshal_entity(RealmEntity), RealmEntity),
+            realm = marshal_entity(RealmEntity),
             email = Email,
             orgs = maybe_add_param(maybe_marshal_user_orgs(Orgs), Orgs)
         }
@@ -169,6 +169,9 @@ convert_fragment(org_management, {bctx_ContextFragment, Type = v1_thrift_binary,
         content = Content
     }.
 
+get_param(Key, Map = #{}) ->
+    maps:get(Key, Map).
+
 maybe_get_param(_Key, undefined) ->
     undefined;
 maybe_get_param(Key, Map) ->
@@ -183,6 +186,10 @@ maybe_add_param(_Value, undefined) ->
     undefined;
 maybe_add_param(Value, _Param) ->
     Value.
+
+marshal_entity(Entity) ->
+    EntityID = get_param(id, Entity),
+    #bctx_v1_Entity{id = EntityID}.
 
 maybe_marshal_entity(undefined) ->
     undefined;

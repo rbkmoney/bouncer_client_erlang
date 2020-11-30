@@ -108,11 +108,14 @@ empty_judge(C) ->
 -spec validate_user_fragment(config()) -> _.
 validate_user_fragment(C) ->
     UserID = <<"someUser">>,
+    UserRealm = <<"external">>,
     mock_services(
         [
             {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
-                case get_user_id(Fragments) of
-                    UserID ->
+                case get_fragment(<<"user">>, Fragments) of
+                    #bctx_v1_ContextFragment{
+                        user = #bctx_v1_User{id = UserID, realm = #bctx_v1_Entity{id = UserRealm}}
+                    } ->
                         {ok, #bdcs_Judgement{resolution = allowed}};
                     _ ->
                         {ok, #bdcs_Judgement{resolution = forbidden}}
@@ -124,7 +127,10 @@ validate_user_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"user">> => bouncer_context_helpers:make_user_fragment(#{id => UserID})}},
+        #{fragments => #{<<"user">> => bouncer_context_helpers:make_user_fragment(#{
+            id => UserID,
+            realm => #{id => UserRealm}
+        })}},
         WoodyContext
     ).
 
@@ -229,7 +235,7 @@ validate_complex_fragment(C) ->
     WoodyContext = woody_context:new(),
     ComplexFragment =
         bouncer_context_helpers:add_user(
-            #{id => <<"USER">>, email => <<"user@example.org">>},
+            #{id => <<"USER">>, realm => #{id => <<"external">>}, email => <<"user@example.org">>},
             bouncer_context_helpers:add_auth(
                 #{method => <<"METHOD">>},
                 bouncer_context_helpers:make_env_fragment(
@@ -311,6 +317,16 @@ get_user_id(#bdcs_Context{
             error(Error);
         #bctx_v1_ContextFragment{user = #bctx_v1_User{id = UserID}} ->
             UserID
+    end.
+
+get_fragment(ID, #bdcs_Context{
+    fragments = Fragments
+}) ->
+    case decode_fragment(maps:get(ID, Fragments)) of
+        {error, _} = Error ->
+            error(Error);
+        Fragment = #bctx_v1_ContextFragment{} ->
+            Fragment
     end.
 
 decode_fragment(#bctx_ContextFragment{type = v1_thrift_binary, content = Content}) ->
