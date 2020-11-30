@@ -127,10 +127,14 @@ validate_user_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"user">> => bouncer_context_helpers:make_user_fragment(#{
-            id => UserID,
-            realm => #{id => UserRealm}
-        })}},
+        #{
+            fragments => #{
+                <<"user">> => bouncer_context_helpers:make_user_fragment(#{
+                    id => UserID,
+                    realm => #{id => UserRealm}
+                })
+            }
+        },
         WoodyContext
     ).
 
