@@ -13,10 +13,9 @@
 
 -type context_fragment_id() :: binary().
 -type ruleset_id() :: binary().
--type bouncer_fragment() :: bouncer_context_v1_thrift:'ContextFragment'().
 -type encoded_bouncer_fragment() :: bouncer_context_thrift:'ContextFragment'().
 -type context_fragment() ::
-    {fragment, bouncer_fragment()}
+    bouncer_context_helpers:context_fragment()
     | {encoded_fragment, encoded_bouncer_fragment()}.
 
 -type judge_context() :: #{
@@ -71,11 +70,11 @@ collect_fragments(_, Context) ->
 
 collect_fragments_(FragmentID, {encoded_fragment, EncodedFragment}, Acc0) ->
     Acc0#{FragmentID => EncodedFragment};
-collect_fragments_(FragmentID, {fragment, Fragment}, Acc0) ->
+collect_fragments_(FragmentID, ContextFragment = #bctx_v1_ContextFragment{}, Acc0) ->
     Acc0#{
         FragmentID => #bctx_ContextFragment{
             type = v1_thrift_binary,
-            content = encode_context_fragment(Fragment)
+            content = encode_context_fragment(ContextFragment)
         }
     }.
 

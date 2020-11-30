@@ -4,20 +4,24 @@
 -include_lib("bouncer_proto/include/bouncer_context_v1_thrift.hrl").
 -include_lib("bouncer_proto/include/bouncer_context_thrift.hrl").
 
--export([make_default_env_context_fragment/0]).
--export([make_env_context_fragment/1]).
--export([make_auth_context_fragment/1]).
--export([make_default_user_context_fragment/1]).
--export([make_user_context_fragment/1]).
--export([make_requester_context_fragment/1]).
--export([get_user_context_fragment/2]).
+-export([empty/0]).
+-export([make_env_fragment/1]).
+-export([add_env/2]).
+-export([make_auth_fragment/1]).
+-export([add_auth/2]).
+-export([make_user_fragment/1]).
+-export([add_user/2]).
+-export([make_requester_fragment/1]).
+-export([add_requester/2]).
+
+-export([get_user_orgs_fragment/2]).
 
 -type id() :: binary().
 -type method() :: binary().
 -type email() :: binary().
 -type timestamp() :: binary().
 -type ip() :: string().
--type context_fragment() :: bouncer_client:context_fragment().
+-type context_fragment() :: bouncer_context_v1_thrift:'ContextFragment'().
 -type woody_context() :: woody_context:ctx().
 
 -type entity() :: #{
@@ -71,81 +75,84 @@
     ip => ip()
 }.
 
+-export_type([context_fragment/0]).
+
 -export_type([environment_params/0]).
 -export_type([auth_params/0]).
 -export_type([user_params/0]).
 -export_type([requester_params/0]).
 
--spec make_default_env_context_fragment() -> context_fragment().
-make_default_env_context_fragment() ->
-    Params = #{
-        now => genlib_rfc3339:format(genlib_time:unow(), second)
-    },
-    make_env_context_fragment(Params).
+-spec empty() -> context_fragment().
+empty() ->
+    #bctx_v1_ContextFragment{}.
 
--spec make_env_context_fragment(environment_params()) -> context_fragment().
-make_env_context_fragment(Params) ->
-    Datetime = maybe_get_param(now, Params),
+-spec make_env_fragment(environment_params()) -> context_fragment().
+make_env_fragment(Params) ->
+    add_env(Params, empty()).
+
+-spec add_env(environment_params(), context_fragment()) -> context_fragment().
+add_env(Params, ContextFragment = #bctx_v1_ContextFragment{env = undefined}) ->
+    Now = maybe_get_param(now, Params, genlib_rfc3339:format(genlib_time:unow(), second)),
     Deployment = maybe_get_param(deployment, Params),
     DeploymentID = maybe_get_param(id, Deployment),
-
-    {fragment, #bctx_v1_ContextFragment{
+    ContextFragment#bctx_v1_ContextFragment{
         env = #bctx_v1_Environment{
-            now = Datetime,
+            now = Now,
             deployment = maybe_add_param(#bctx_v1_Deployment{id = DeploymentID}, Deployment)
         }
-    }}.
+    }.
 
--spec make_auth_context_fragment(auth_params()) -> context_fragment().
-make_auth_context_fragment(Params) ->
+-spec make_auth_fragment(auth_params()) -> context_fragment().
+make_auth_fragment(Params) ->
+    add_auth(Params, empty()).
+
+-spec add_auth(auth_params(), context_fragment()) -> context_fragment().
+add_auth(Params, ContextFragment = #bctx_v1_ContextFragment{auth = undefined}) ->
     Method = maybe_get_param(method, Params),
     Scope = maybe_get_param(scope, Params),
     Expiration = maybe_get_param(expiration, Params),
-
-    {fragment, #bctx_v1_ContextFragment{
+    ContextFragment#bctx_v1_ContextFragment{
         auth = #bctx_v1_Auth{
             method = Method,
             scope = maybe_marshal_auth_scopes(Scope),
             expiration = Expiration
         }
-    }}.
+    }.
 
--spec make_default_user_context_fragment(id()) -> context_fragment().
-make_default_user_context_fragment(UserID) ->
-    {fragment, #bctx_v1_ContextFragment{
-        user = #bctx_v1_User{
-            id = UserID
-        }
-    }}.
+-spec make_user_fragment(user_params()) -> context_fragment().
+make_user_fragment(Params) ->
+    add_user(Params, empty()).
 
--spec make_user_context_fragment(user_params()) -> context_fragment().
-make_user_context_fragment(Params) ->
+-spec add_user(user_params(), context_fragment()) -> context_fragment().
+add_user(Params, ContextFragment = #bctx_v1_ContextFragment{user = undefined}) ->
     UserID = maybe_get_param(id, Params),
     RealmEntity = maybe_get_param(realm, Params),
     Email = maybe_get_param(email, Params),
     Orgs = maybe_get_param(orgs, Params),
-
-    {fragment, #bctx_v1_ContextFragment{
+    ContextFragment#bctx_v1_ContextFragment{
         user = #bctx_v1_User{
             id = UserID,
             realm = maybe_add_param(maybe_marshal_entity(RealmEntity), RealmEntity),
             email = Email,
             orgs = maybe_add_param(maybe_marshal_user_orgs(Orgs), Orgs)
         }
-    }}.
+    }.
 
--spec make_requester_context_fragment(requester_params()) -> context_fragment().
-make_requester_context_fragment(Params) ->
+-spec make_requester_fragment(requester_params()) -> context_fragment().
+make_requester_fragment(Params) ->
+    add_requester(Params, empty()).
+
+-spec add_requester(requester_params(), context_fragment()) -> context_fragment().
+add_requester(Params, ContextFragment = #bctx_v1_ContextFragment{requester = undefined}) ->
     IP = maybe_get_param(ip, Params),
-
-    {fragment, #bctx_v1_ContextFragment{
+    ContextFragment#bctx_v1_ContextFragment{
         requester = #bctx_v1_Requester{
             ip = maybe_marshal_ip(IP)
         }
-    }}.
+    }.
 
--spec get_user_context_fragment(id(), woody_context()) -> {ok, context_fragment()} | {error, {user, notfound}}.
-get_user_context_fragment(UserID, WoodyContext) ->
+-spec get_user_orgs_fragment(id(), woody_context()) -> {ok, context_fragment()} | {error, {user, notfound}}.
+get_user_orgs_fragment(UserID, WoodyContext) ->
     ServiceName = org_management,
     case bouncer_client_woody:call(ServiceName, 'GetUserContext', {UserID}, WoodyContext) of
         {ok, EncodedFragment} ->
@@ -166,6 +173,11 @@ maybe_get_param(_Key, undefined) ->
     undefined;
 maybe_get_param(Key, Map) ->
     maps:get(Key, Map, undefined).
+
+maybe_get_param(_Key, undefined, Default) ->
+    Default;
+maybe_get_param(Key, Map, Default) ->
+    maps:get(Key, Map, Default).
 
 maybe_add_param(_Value, undefined) ->
     undefined;
