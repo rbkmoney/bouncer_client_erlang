@@ -74,9 +74,7 @@ collect_fragments(_, Context) ->
 collect_fragments_(FragmentID, {encoded_fragment, EncodedFragment}, Acc0) ->
     Acc0#{FragmentID => EncodedFragment};
 collect_fragments_(FragmentID, ContextFragment = #bctx_v1_ContextFragment{}, Acc0) ->
-    Acc0#{
-        FragmentID => bake_context_fragment(ContextFragment)
-    }.
+    collect_fragments_(FragmentID, bake_context_fragment(ContextFragment), Acc0).
 
 %%
 
