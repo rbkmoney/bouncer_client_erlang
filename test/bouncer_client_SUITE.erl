@@ -98,10 +98,12 @@ end_per_testcase(_Name, C) ->
 empty_judge(C) ->
     mock_services(
         [
-            {bouncer, fun('Judge', _) -> {ok, #bdcs_Judgement{
-                resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                resolution_legacy = allowed
-            }} end}
+            {bouncer, fun('Judge', _) ->
+                {ok, #bdcs_Judgement{
+                    resolution = {allowed, #bdcs_ResolutionAllowed{}},
+                    resolution_legacy = allowed
+                }}
+            end}
         ],
         C
     ),
