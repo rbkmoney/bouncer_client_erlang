@@ -161,16 +161,16 @@ get_user_orgs_fragment(UserID, WoodyContext) ->
             {error, {user, notfound}}
     end.
 
+%% As taken from org_management_proto/include/orgmgmt_context_thrift.hrl, please keep in sync:
 %% struct 'ContextFragment'
-%% Taken from org_management_proto/include/orgmgmt_context_thrift.hrl, please keep in sync.
--record('orgmgmt_bctx_ContextFragment', {
-    'type' :: atom(),
-    'content' :: binary() | undefined
-}).
+%% -record('bctx_ContextFragment', {
+%%     'type' :: atom(),
+%%     'content' :: binary() | undefined
+%% }).
 
 convert_fragment(
     org_management,
-    #orgmgmt_bctx_ContextFragment{type = Type = v1_thrift_binary, content = Content}
+    {bctx_ContextFragment, Type = v1_thrift_binary, Content}
 ) when is_binary(Content) ->
     #bctx_ContextFragment{
         type = Type,
