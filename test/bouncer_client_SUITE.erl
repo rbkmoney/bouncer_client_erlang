@@ -219,13 +219,15 @@ validate_auth_fragment_scope(C) ->
             {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
                 Auth = get_fragment(<<"auth">>, Fragments),
                 ?assertEqual(
-                    #bctx_v1_ContextFragment{auth = #bctx_v1_Auth{
-                        method = Method,
-                        scope = [
-                            #bctx_v1_AuthScope{customer = #bctx_v1_Entity{id = CustomerID}},
-                            #bctx_v1_AuthScope{party = #bctx_v1_Entity{id = PartyID}}
-                        ]
-                    }},
+                    #bctx_v1_ContextFragment{
+                        auth = #bctx_v1_Auth{
+                            method = Method,
+                            scope = [
+                                #bctx_v1_AuthScope{customer = #bctx_v1_Entity{id = CustomerID}},
+                                #bctx_v1_AuthScope{party = #bctx_v1_Entity{id = PartyID}}
+                            ]
+                        }
+                    },
                     Auth
                 ),
                 {ok, #bdcs_Judgement{
@@ -239,15 +241,17 @@ validate_auth_fragment_scope(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{
-            <<"auth">> => bouncer_context_helpers:make_auth_fragment(#{
-                method => Method,
-                scope => [
-                    #{party => #{id => PartyID}},
-                    #{customer => #{id => CustomerID}}
-                ]
-            })
-        }},
+        #{
+            fragments => #{
+                <<"auth">> => bouncer_context_helpers:make_auth_fragment(#{
+                    method => Method,
+                    scope => [
+                        #{party => #{id => PartyID}},
+                        #{customer => #{id => CustomerID}}
+                    ]
+                })
+            }
+        },
         WoodyContext
     ).
 
