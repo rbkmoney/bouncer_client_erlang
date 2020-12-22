@@ -213,7 +213,7 @@ validate_auth_fragment(C) ->
 validate_auth_fragment_scope(C) ->
     Method = <<"Blep">>,
     PartyID = <<"PARTY">>,
-    CustomerID = <<"💩"/utf8>>,
+    CustomerID = <<"🎎"/utf8>>,
     mock_services(
         [
             {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
