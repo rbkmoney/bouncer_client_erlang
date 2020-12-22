@@ -214,6 +214,7 @@ validate_auth_fragment_scope(C) ->
     Method = <<"Blep">>,
     PartyID = <<"PARTY">>,
     CustomerID = <<"🎎"/utf8>>,
+    InvoiceTemplateID = <<"🎷"/utf8>>,
     mock_services(
         [
             {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
@@ -223,7 +224,10 @@ validate_auth_fragment_scope(C) ->
                         auth = #bctx_v1_Auth{
                             method = Method,
                             scope = [
-                                #bctx_v1_AuthScope{customer = #bctx_v1_Entity{id = CustomerID}},
+                                #bctx_v1_AuthScope{
+                                    invoice_template = #bctx_v1_Entity{id = InvoiceTemplateID},
+                                    customer = #bctx_v1_Entity{id = CustomerID}
+                                },
                                 #bctx_v1_AuthScope{party = #bctx_v1_Entity{id = PartyID}}
                             ]
                         }
@@ -247,7 +251,10 @@ validate_auth_fragment_scope(C) ->
                     method => Method,
                     scope => [
                         #{party => #{id => PartyID}},
-                        #{customer => #{id => CustomerID}}
+                        #{
+                            customer => #{id => CustomerID},
+                            invoice_template => #{id => InvoiceTemplateID}
+                        }
                     ]
                 })
             }
