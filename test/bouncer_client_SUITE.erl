@@ -178,19 +178,23 @@ validate_env_fragment(C) ->
 -spec validate_auth_fragment(config()) -> _.
 validate_auth_fragment(C) ->
     Method = <<"someMethod">>,
+    TokenID = <<"📟"/utf8>>,
     mock_services(
         [
             {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
-                case get_auth_method(Fragments) of
-                    Method ->
-                        {ok, #bdcs_Judgement{
-                            resolution = {allowed, #bdcs_ResolutionAllowed{}}
-                        }};
-                    _ ->
-                        {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
-                        }}
-                end
+                Auth = get_fragment(<<"auth">>, Fragments),
+                ?assertEqual(
+                    #bctx_v1_ContextFragment{
+                        auth = #bctx_v1_Auth{
+                            method = Method,
+                            token = #bctx_v1_Token{id = TokenID}
+                        }
+                    },
+                    Auth
+                ),
+                {ok, #bdcs_Judgement{
+                    resolution = {allowed, #bdcs_ResolutionAllowed{}}
+                }}
             end}
         ],
         C
@@ -198,7 +202,10 @@ validate_auth_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"auth">> => bouncer_context_helpers:make_auth_fragment(#{method => Method})}},
+        #{fragments => #{<<"auth">> => bouncer_context_helpers:make_auth_fragment(#{
+            method => Method,
+            token => #{id => TokenID}
+        })}},
         WoodyContext
     ).
 
@@ -374,12 +381,6 @@ get_ip(#bdcs_Context{
 }) ->
     #bctx_v1_ContextFragment{requester = #bctx_v1_Requester{ip = IP}} = decode_fragment(Fragment),
     IP.
-
-get_auth_method(#bdcs_Context{
-    fragments = #{<<"auth">> := Fragment}
-}) ->
-    #bctx_v1_ContextFragment{auth = #bctx_v1_Auth{method = Method}} = decode_fragment(Fragment),
-    Method.
 
 get_time(#bdcs_Context{
     fragments = #{<<"env">> := Fragment}
