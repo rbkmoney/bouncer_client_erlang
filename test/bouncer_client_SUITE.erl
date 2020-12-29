@@ -102,8 +102,7 @@ empty_judge(C) ->
         [
             {bouncer, fun('Judge', _) ->
                 {ok, #bdcs_Judgement{
-                    resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                    resolution_legacy = allowed
+                    resolution = {allowed, #bdcs_ResolutionAllowed{}}
                 }}
             end}
         ],
@@ -124,13 +123,11 @@ validate_user_fragment(C) ->
                         user = #bctx_v1_User{id = UserID, realm = #bctx_v1_Entity{id = UserRealm}}
                     } ->
                         {ok, #bdcs_Judgement{
-                            resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                            resolution_legacy = allowed
+                            resolution = {allowed, #bdcs_ResolutionAllowed{}}
                         }};
                     _ ->
                         {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                            resolution_legacy = forbidden
+                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                         }}
                 end
             end}
@@ -160,13 +157,11 @@ validate_env_fragment(C) ->
                 case get_time(Fragments) of
                     Time ->
                         {ok, #bdcs_Judgement{
-                            resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                            resolution_legacy = allowed
+                            resolution = {allowed, #bdcs_ResolutionAllowed{}}
                         }};
                     _ ->
                         {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                            resolution_legacy = forbidden
+                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                         }}
                 end
             end}
@@ -189,13 +184,11 @@ validate_auth_fragment(C) ->
                 case get_auth_method(Fragments) of
                     Method ->
                         {ok, #bdcs_Judgement{
-                            resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                            resolution_legacy = allowed
+                            resolution = {allowed, #bdcs_ResolutionAllowed{}}
                         }};
                     _ ->
                         {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                            resolution_legacy = forbidden
+                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                         }}
                 end
             end}
@@ -235,8 +228,7 @@ validate_auth_fragment_scope(C) ->
                     Auth
                 ),
                 {ok, #bdcs_Judgement{
-                    resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                    resolution_legacy = allowed
+                    resolution = {allowed, #bdcs_ResolutionAllowed{}}
                 }}
             end}
         ],
@@ -271,20 +263,17 @@ validate_requester_fragment(C) ->
                 case get_ip(Fragments) of
                     undefined ->
                         {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                            resolution_legacy = forbidden
+                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                         }};
                     BinaryIP ->
                         case binary_to_list(BinaryIP) of
                             IP ->
                                 {ok, #bdcs_Judgement{
-                                    resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                                    resolution_legacy = allowed
+                                    resolution = {allowed, #bdcs_ResolutionAllowed{}}
                                 }};
                             _ ->
                                 {ok, #bdcs_Judgement{
-                                    resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                                    resolution_legacy = forbidden
+                                    resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                                 }}
                         end
                 end
@@ -313,19 +302,16 @@ validate_complex_fragment(C) ->
                                 user = #bctx_v1_User{}
                             } ->
                                 {ok, #bdcs_Judgement{
-                                    resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                                    resolution_legacy = allowed
+                                    resolution = {allowed, #bdcs_ResolutionAllowed{}}
                                 }};
                             _ ->
                                 {ok, #bdcs_Judgement{
-                                    resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                                    resolution_legacy = forbidden
+                                    resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                                 }}
                         end;
                     _ ->
                         {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                            resolution_legacy = forbidden
+                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                         }}
                 end
             end}
@@ -366,13 +352,11 @@ validate_remote_user_fragment(C) ->
                 case get_user_id(Fragments) of
                     UserID ->
                         {ok, #bdcs_Judgement{
-                            resolution = {allowed, #bdcs_ResolutionAllowed{}},
-                            resolution_legacy = allowed
+                            resolution = {allowed, #bdcs_ResolutionAllowed{}}
                         }};
                     _ ->
                         {ok, #bdcs_Judgement{
-                            resolution = {forbidden, #bdcs_ResolutionForbidden{}},
-                            resolution_legacy = forbidden
+                            resolution = {forbidden, #bdcs_ResolutionForbidden{}}
                         }}
                 end
             end}
