@@ -202,10 +202,14 @@ validate_auth_fragment(C) ->
     WoodyContext = woody_context:new(),
     allowed = bouncer_client:judge(
         ?RULESET_ID,
-        #{fragments => #{<<"auth">> => bouncer_context_helpers:make_auth_fragment(#{
-            method => Method,
-            token => #{id => TokenID}
-        })}},
+        #{
+            fragments => #{
+                <<"auth">> => bouncer_context_helpers:make_auth_fragment(#{
+                    method => Method,
+                    token => #{id => TokenID}
+                })
+            }
+        },
         WoodyContext
     ).
 
