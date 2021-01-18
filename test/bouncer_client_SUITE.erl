@@ -126,11 +126,13 @@ validate_user_fragment(C) ->
                         user = #bctx_v1_User{
                             id = UserID,
                             realm = #bctx_v1_Entity{id = UserRealm},
-                            orgs = [#bctx_v1_Organization{
-                                id = OrgID,
-                                party = #bctx_v1_Entity{id = PartyID},
-                                owner = #bctx_v1_Entity{id = UserID}
-                            }]
+                            orgs = [
+                                #bctx_v1_Organization{
+                                    id = OrgID,
+                                    party = #bctx_v1_Entity{id = PartyID},
+                                    owner = #bctx_v1_Entity{id = UserID}
+                                }
+                            ]
                         }
                     },
                     Auth
