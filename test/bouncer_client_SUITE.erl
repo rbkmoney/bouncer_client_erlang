@@ -413,7 +413,7 @@ validate_remote_user_fragment(C) ->
                         id = UserID
                     }
                 }),
-                {ok, {bctx_ContextFragment, v1_thrift_binary, Content}}
+                {ok, {'bctx_ContextFragment', v1_thrift_binary, Content}}
             end},
             {bouncer, fun('Judge', {_RulesetID, Fragments}) ->
                 case get_user_id(Fragments) of
