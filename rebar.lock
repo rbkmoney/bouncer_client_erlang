@@ -1,7 +1,7 @@
 {"1.2.0",
 [{<<"bear">>,{pkg,<<"bear">>,<<"0.8.7">>},3},
  {<<"bouncer_proto">>,
-  {git,"git@github.com:rbkmoney/bouncer-proto.git",
+  {git,"https://github.com/rbkmoney/bouncer-proto.git",
        {ref,"7ac88717904c6bab73096198b308380e006ed42c"}},
   0},
  {<<"cache">>,{pkg,<<"cache">>,<<"2.3.3">>},1},
@@ -36,7 +36,7 @@
  {<<"parse_trans">>,{pkg,<<"parse_trans">>,<<"3.3.1">>},2},
  {<<"ranch">>,{pkg,<<"ranch">>,<<"1.7.1">>},2},
  {<<"scoper">>,
-  {git,"git@github.com:rbkmoney/scoper.git",
+  {git,"https://github.com/rbkmoney/scoper.git",
        {ref,"89e1af7422199ea3fa287207300bed1d6e00e5ab"}},
   0},
  {<<"snowflake">>,
@@ -50,7 +50,7 @@
   1},
  {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.7.0">>},2},
  {<<"woody">>,
-  {git,"git@github.com:rbkmoney/woody_erlang.git",
+  {git,"https://github.com/rbkmoney/woody_erlang.git",
        {ref,"f2cd30883d58eb1c3ab2172556956f757bc27e23"}},
   0}]}.
 [
